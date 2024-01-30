@@ -1,54 +1,37 @@
-
 module "bucket" {
   source  = "app.terraform.io/ryanf/bucket/s3"
-  version = "1.0.8"
-  # insert required variables here
-  
-  for_each = local.buckets
+  version = "1.0.9"
 
+  for_each = local.buckets
+  bucket_tag_name = each.value.bucket_tag_name
   bucket_name = each.key
   environment = each.value.environment
-  bucket_tag_name = each.value.bucket_tag_name
+  s3_force_destroy = each.value.s3_force_destroy
 }
 
 resource "aws_s3_bucket_policy" "bucketcf" {
-  bucket = "cfhost123"
+  bucket = local.host_bucket_id
   policy = data.aws_iam_policy_document.bucketcf.json
   depends_on = [ aws_cloudfront_distribution.distribution ]
 }
 
 resource "aws_s3_bucket_policy" "bucketlog" {
-  bucket = "cflogger123"
+  bucket = local.log_bucket_id
   policy = data.aws_iam_policy_document.logger.json
-  depends_on = [ aws_cloudfront_distribution.distribution ]
+
 }
 
-locals {
-  s3_origin_id = "cfhost123"
-  buckets = {
-      "cfhost123" = {
-        environment = "cfhost123"
-        s3_force_destroy = true
-        bucket_tag_name = "cfhost"
-      },
-      "cflogger123" = {
-        environment = "devcf"
-        s3_force_destroy = true
-        bucket_tag_name = "cflogger123"   
-      }
-   }
-}
 
 resource "aws_s3_bucket_ownership_controls" "acl" {
-  bucket =  module.bucket["cflogger123"].s3_bucket_id[0]
+  bucket =  local.log_bucket_id
   rule {
-    object_ownership = "BucketOwnerPreferred"
+    object_ownership = var.bucket_ownership_control
   }
 }
 
 resource "aws_s3_bucket_acl" "acl" {
   depends_on = [aws_s3_bucket_ownership_controls.acl]
-  bucket = module.bucket["cflogger123"].s3_bucket_id[0]
+  bucket = local.log_bucket_id
 
   access_control_policy {
     grant {
@@ -56,16 +39,18 @@ resource "aws_s3_bucket_acl" "acl" {
         id = data.aws_canonical_user_id.current.id
         type = "CanonicalUser"
       }
-      permission = "FULL_CONTROL"
+      permission = var.bucket_acl_permission
     }
     owner {
       id = data.aws_canonical_user_id.current.id
     }
   }
 }
+
 resource "aws_cloudfront_distribution" "distribution" {
+  depends_on = [ aws_s3_bucket_ownership_controls.acl ]
   origin {
-    domain_name              = module.bucket["cfhost123"].s3_bucket_domain_name[0]
+    domain_name              = local.s3_bucket_domain
 
     origin_access_control_id = aws_cloudfront_origin_access_control.oac.id
     origin_id                = local.s3_origin_id
@@ -78,8 +63,7 @@ resource "aws_cloudfront_distribution" "distribution" {
 
   logging_config {
     include_cookies = false
-    bucket          = module.bucket["cflogger123"].s3_bucket_domain_name[0]
-
+    bucket          = local.log_bucket_domain
   }
 
   # aliases = ["mysite.example.com", "yoursite.example.com"]
@@ -110,7 +94,7 @@ resource "aws_cloudfront_distribution" "distribution" {
     allowed_methods  = ["GET", "HEAD", "OPTIONS"]
     cached_methods   = ["GET", "HEAD"]
     target_origin_id = local.s3_origin_id
-  cache_policy_id = aws_cloudfront_cache_policy.cache.id
+    cache_policy_id = aws_cloudfront_cache_policy.cache.id
 
     min_ttl                = var.min_ttl
     default_ttl            = var.default_ttl

@@ -13,8 +13,9 @@ data "aws_iam_policy_document" "bucketcf" {
     ]
 
     resources = [
-      module.bucket["cfhost123"].s3_bucket_arn[0],
-      "${module.bucket["cfhost123"].s3_bucket_arn[0]}/*",
+      
+      "${local.host_bucket_arn}",
+      "${local.host_bucket_arn}/*",
     ]
   }
 }
@@ -32,8 +33,8 @@ data "aws_iam_policy_document" "logger" {
     ]
 
     resources = [
-      module.bucket["cflogger123"].s3_bucket_arn[0],
-      "${module.bucket["cflogger123"].s3_bucket_arn[0]}/*",
+      "${local.log_bucket_arn}",
+      "${local.log_bucket_arn}/*",
     ]
   }
 }
