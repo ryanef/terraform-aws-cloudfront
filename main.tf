@@ -1,14 +1,3 @@
-module "bucket" {
-  source  = "app.terraform.io/ryanf/bucket/s3"
-  version = "1.0.9"
-
-  for_each = local.buckets
-  bucket_tag_name = each.value.bucket_tag_name
-  bucket_name = each.key
-  environment = each.value.environment
-  s3_force_destroy = each.value.s3_force_destroy
-}
-
 resource "aws_s3_bucket_policy" "bucketcf" {
   bucket = local.host_bucket_id
   policy = data.aws_iam_policy_document.bucketcf.json
