@@ -1,18 +1,18 @@
 resource "aws_s3_bucket_policy" "bucketcf" {
-  bucket = local.host_bucket_id
+  bucket = var.host_bucket_id
   policy = data.aws_iam_policy_document.bucketcf.json
   depends_on = [ aws_cloudfront_distribution.distribution ]
 }
 
 resource "aws_s3_bucket_policy" "bucketlog" {
-  bucket = local.log_bucket_id
+  bucket = var.log_bucket_id
   policy = data.aws_iam_policy_document.logger.json
 
 }
 
 
 resource "aws_s3_bucket_ownership_controls" "acl" {
-  bucket =  local.log_bucket_id
+  bucket =  var.log_bucket_id
   rule {
     object_ownership = var.bucket_ownership_control
   }
@@ -20,7 +20,7 @@ resource "aws_s3_bucket_ownership_controls" "acl" {
 
 resource "aws_s3_bucket_acl" "acl" {
   depends_on = [aws_s3_bucket_ownership_controls.acl]
-  bucket = local.log_bucket_id
+  bucket = var.log_bucket_id
 
   access_control_policy {
     grant {
@@ -39,10 +39,10 @@ resource "aws_s3_bucket_acl" "acl" {
 resource "aws_cloudfront_distribution" "distribution" {
   depends_on = [ aws_s3_bucket_ownership_controls.acl ]
   origin {
-    domain_name              = local.s3_bucket_domain
+    domain_name              = var.s3_bucket_domain
 
     origin_access_control_id = aws_cloudfront_origin_access_control.oac.id
-    origin_id                = local.s3_origin_id
+    origin_id                = var.s3_origin_id
   }
 
   enabled             = true
@@ -52,7 +52,7 @@ resource "aws_cloudfront_distribution" "distribution" {
 
   logging_config {
     include_cookies = false
-    bucket          = local.log_bucket_domain
+    bucket          = var.log_bucket_domain
   }
 
   # aliases = ["mysite.example.com", "yoursite.example.com"]
@@ -60,7 +60,7 @@ resource "aws_cloudfront_distribution" "distribution" {
   default_cache_behavior {
     allowed_methods  = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
     cached_methods   = ["GET", "HEAD"]
-    target_origin_id = local.s3_origin_id
+    target_origin_id = var.s3_origin_id
 
     forwarded_values {
       query_string = false
@@ -82,7 +82,7 @@ resource "aws_cloudfront_distribution" "distribution" {
     path_pattern     = "/content/*"
     allowed_methods  = ["GET", "HEAD", "OPTIONS"]
     cached_methods   = ["GET", "HEAD"]
-    target_origin_id = local.s3_origin_id
+    target_origin_id = var.s3_origin_id
     cache_policy_id = aws_cloudfront_cache_policy.cache.id
 
     min_ttl                = var.min_ttl

@@ -14,8 +14,8 @@ data "aws_iam_policy_document" "bucketcf" {
 
     resources = [
       
-      "${local.host_bucket_arn}",
-      "${local.host_bucket_arn}/*",
+      "${var.host_bucket_arn}",
+      "${var.host_bucket_arn}/*",
     ]
   }
 }
@@ -33,8 +33,8 @@ data "aws_iam_policy_document" "logger" {
     ]
 
     resources = [
-      "${local.log_bucket_arn}",
-      "${local.log_bucket_arn}/*",
+      "${var.log_bucket_arn}",
+      "${var.log_bucket_arn}/*",
     ]
   }
 }

@@ -3,13 +3,10 @@ variable "default_root_object" {
   type = string
   default = "index.html"
 }
-
 variable "environment" {
   default = "devcf"
   type = string
 }
-
-
 variable "default_cache_cookies_forward" {
   type = string
   default = true
@@ -18,9 +15,18 @@ variable "price_class" {
   default = "PriceClass_200"
   type = string
 }
+variable "host_bucket_id" {}
+
 variable "s3_log_bucket" {
   default = ""
 }
+variable "log_bucket_arn"{}
+variable "host_bucket_arn"{}
+
+variable "log_bucket_id"{}
+variable "s3_bucket_domain" {}
+variable "s3_origin_id" {}
+variable "log_bucket_domain" {}
 variable "bucket_ownership_control" {
   default = "BucketOwnerPreferred"
   type = string
