@@ -1,46 +1,20 @@
-resource "aws_s3_bucket_policy" "bucketcf" {
-  bucket = var.host_bucket_id
-  policy = data.aws_iam_policy_document.bucketcf.json
-  depends_on = [ aws_cloudfront_distribution.distribution ]
+module "bucket" {
+  source  = "app.terraform.io/ryanf/bucket/s3"
+  version = "1.1.0"
+  # insert required variables here
+  bucket_tag_name = "firstoneweds"
+  bucket_name = "wedsswedzz11"
+  bucket_name_log = "wedsloglogqqw"
 }
-
-resource "aws_s3_bucket_policy" "bucketlog" {
-  bucket = var.log_bucket_id
-  policy = data.aws_iam_policy_document.logger.json
-
-}
-
-
-resource "aws_s3_bucket_ownership_controls" "acl" {
-  bucket =  var.log_bucket_id
-  rule {
-    object_ownership = var.bucket_ownership_control
-  }
-}
-
-resource "aws_s3_bucket_acl" "acl" {
-  depends_on = [aws_s3_bucket_ownership_controls.acl]
-  bucket = var.log_bucket_id
-
-  access_control_policy {
-    grant {
-      grantee {
-        id = data.aws_canonical_user_id.current.id
-        type = "CanonicalUser"
-      }
-      permission = var.bucket_acl_permission
-    }
-    owner {
-      id = data.aws_canonical_user_id.current.id
-    }
-  }
+resource "aws_s3_bucket_policy" "cf_bucket" {
+  bucket = module.bucket.s3_bucket_id
+  policy = data.aws_iam_policy_document.cf_bucket.json
 }
 
 resource "aws_cloudfront_distribution" "distribution" {
-  depends_on = [ aws_s3_bucket_ownership_controls.acl ]
+ 
   origin {
-    domain_name              = var.s3_bucket_domain
-
+    domain_name              = module.bucket.s3_bucket_domain_name
     origin_access_control_id = aws_cloudfront_origin_access_control.oac.id
     origin_id                = var.s3_origin_id
   }
@@ -50,9 +24,14 @@ resource "aws_cloudfront_distribution" "distribution" {
   comment             = "comment"
   default_root_object = var.default_root_object
 
-  logging_config {
-    include_cookies = false
-    bucket          = var.log_bucket_domain
+  dynamic "logging_config" {
+    for_each =  var.logging_config
+
+    content {
+      bucket          = logging_config.value["bucket"]
+      prefix          = lookup(logging_config.value, "prefix", null)
+      include_cookies = lookup(logging_config.value, "include_cookies", null)
+    }
   }
 
   # aliases = ["mysite.example.com", "yoursite.example.com"]
