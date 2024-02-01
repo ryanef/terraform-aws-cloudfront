@@ -13,8 +13,8 @@ data "aws_iam_policy_document" "cf_bucket" {
 
     resources = [
       
-      module.bucket.s3_bucket_arn,
-      "${module.bucket.s3_bucket_arn}/*",
+      var.s3_bucket_arn,
+      "${var.s3_bucket_arn}/*",
     ]
   }
 }

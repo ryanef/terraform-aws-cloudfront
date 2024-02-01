@@ -1,20 +1,8 @@
-module "bucket" {
-  source  = "app.terraform.io/ryanf/bucket/s3"
-  version = "1.1.0"
-  # insert required variables here
-  bucket_tag_name = "firstoneweds"
-  bucket_name = "wedsswedzz11"
-  bucket_name_log = "wedsloglogqqw"
-}
-resource "aws_s3_bucket_policy" "cf_bucket" {
-  bucket = module.bucket.s3_bucket_id
-  policy = data.aws_iam_policy_document.cf_bucket.json
-}
 
 resource "aws_cloudfront_distribution" "distribution" {
  
   origin {
-    domain_name              = module.bucket.s3_bucket_domain_name
+    domain_name              = var.origin_domain_name
     origin_access_control_id = aws_cloudfront_origin_access_control.oac.id
     origin_id                = var.s3_origin_id
   }

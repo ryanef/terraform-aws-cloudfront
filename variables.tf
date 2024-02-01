@@ -48,7 +48,10 @@ variable "logging_config" {
     
   }
 }
-
+variable "log_bucket_id" {
+  type = string
+  default = ""
+}
 variable "min_ttl"{
   default = 0
   type = number
@@ -62,6 +65,11 @@ variable "oac_name" {
   default = "tfanoacname"
   type = string
 }
+
+variable "origin_domain_name" {
+  type = string
+  default = ""
+}
 variable "price_class" {
   default = "PriceClass_200"
   type = string
@@ -70,7 +78,10 @@ variable "query_string" {
   default = false
   type = bool
 }
-
+variable "s3_bucket_arn" {
+  type = string
+  default = ""
+}
 variable "s3_log_bucket" {
   default = null
 }
